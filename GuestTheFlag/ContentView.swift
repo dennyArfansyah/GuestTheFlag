@@ -12,6 +12,8 @@ struct ContentView: View {
     @State private var showingAlert = false
     @State private var countries = ["Estonia", "France", "Germany", "Italy", "Monaco", "Nigeria", "Poland", "Russia", "Spain", "UK", "US"].shuffled()
     @State private var correctAnswer = Int.random(in: 0...2)
+    @State private var score = 0
+    @State private var totalQuestion = 0
     
     var body: some View {
         ZStack {
@@ -39,7 +41,7 @@ struct ContentView: View {
                     
                     ForEach(0..<3) { number in
                         Button {
-                            flagTapper(number)
+                            flagTapped(number)
                         } label: {
                             Image(countries[number].lowercased())
                                 .renderingMode(.original)
@@ -56,28 +58,44 @@ struct ContentView: View {
                 Spacer()
                 Spacer()
                 
-                Text("Score is")
+                Text("Score is \(score)")
                     .font(.headline.bold())
                     .foregroundColor(.white)
                 
                 Spacer()
             }.padding(20)
         }
-        .alert(scoreTitle, isPresented: $showingAlert) {
-            Button("Continue", action: askQuestion)
+        .alert("Answer", isPresented: $showingAlert) {
+            Button(totalQuestion != 8 ? "Continue" : "Reset", action: askQuestion)
         } message: {
-            Text("Your score is")
+            Text(scoreTitle)
         }
     }
     
-    private func flagTapper(_ number: Int) {
-        scoreTitle = number == correctAnswer ? "Correct" : "Wrong"
-        showingAlert = true
+    private func flagTapped(_ number: Int) {
+        if number == correctAnswer {
+            showingAlert = false
+            score += 1
+            askQuestion()
+        } else {
+            showingAlert = true
+            scoreTitle = "Wrong, that flag of \(countries[number].lowercased().uppercased())"
+            score -= 1
+        }
+        totalQuestion += 1
+        if totalQuestion == 8 {
+            scoreTitle = "Your score is \(score). Game will reset and your score back to 0"
+            showingAlert = true
+        }
     }
     
     private func askQuestion() {
         countries.shuffle()
         correctAnswer = Int.random(in: 0...2)
+        if totalQuestion == 8 {
+            totalQuestion = 0
+            score = 0
+        }
     }
 }
 
